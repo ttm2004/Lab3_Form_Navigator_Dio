@@ -57,7 +57,7 @@ class _LoginScreenState extends State<LoginScreen> {
       final user = result['user'];
       print('User đăng nhập: $user');
 
-      // TODO: Chuyển sang màn hình khác nếu cần
+      
       // Navigator.pushReplacementNamed(context, '/home');
     }
   }

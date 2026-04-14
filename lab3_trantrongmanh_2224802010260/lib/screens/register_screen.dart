@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -10,34 +11,31 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
-  // final TextEditingController phoneController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController =
       TextEditingController();
 
   bool isShowPassword = false;
   bool isShowConfirmPassword = false;
+  bool isLoading = false;
 
   @override
   void dispose() {
     usernameController.dispose();
     emailController.dispose();
-    // phoneController.dispose();
     passwordController.dispose();
     confirmPasswordController.dispose();
     super.dispose();
   }
 
-  void handleRegister() {
+  void handleRegister() async {
     String username = usernameController.text.trim();
     String email = emailController.text.trim();
-    // String phone = phoneController.text.trim();
     String password = passwordController.text.trim();
     String confirmPassword = confirmPasswordController.text.trim();
 
     if (username.isEmpty ||
         email.isEmpty ||
-        // phone.isEmpty ||
         password.isEmpty ||
         confirmPassword.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -57,11 +55,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
+    setState(() {
+      isLoading = true;
+    });
+
+    final result = await AuthService.register(
+      username,
+      email,
+      password,
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      isLoading = false;
+    });
+
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Chưa kết nối API'),
+      SnackBar(
+        content: Text(result['message']),
       ),
     );
+
+    if (result['success'] == true) {
+      Navigator.pop(context); // quay lại login
+    }
   }
 
   @override
@@ -75,30 +93,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const SizedBox(height: 20),
+
             const Icon(
               Icons.person_add_alt_1,
               size: 60,
               color: Colors.black54,
             ),
+
             const SizedBox(height: 20),
+
             const Text(
-              'Tạo tài khoản mới',
+              'Tạo tài khoản',
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 8),
-            const Text(
-              'Điền thông tin để đăng ký',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey),
-            ),
+
             const SizedBox(height: 30),
 
+            // USERNAME
             TextField(
               controller: usernameController,
               decoration: InputDecoration(
@@ -109,8 +125,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
               ),
             ),
+
             const SizedBox(height: 16),
 
+            // EMAIL
             TextField(
               controller: emailController,
               keyboardType: TextInputType.emailAddress,
@@ -122,10 +140,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
               ),
             ),
+
             const SizedBox(height: 16),
 
-            
-
+            // PASSWORD
             TextField(
               controller: passwordController,
               obscureText: !isShowPassword,
@@ -149,8 +167,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
               ),
             ),
+
             const SizedBox(height: 16),
 
+            // CONFIRM PASSWORD
             TextField(
               controller: confirmPasswordController,
               obscureText: !isShowConfirmPassword,
@@ -160,7 +180,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 suffixIcon: IconButton(
                   onPressed: () {
                     setState(() {
-                      isShowConfirmPassword = !isShowConfirmPassword;
+                      isShowConfirmPassword =
+                          !isShowConfirmPassword;
                     });
                   },
                   icon: Icon(
@@ -174,14 +195,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
               ),
             ),
+
             const SizedBox(height: 24),
 
             SizedBox(
               width: double.infinity,
               height: 45,
               child: ElevatedButton(
-                onPressed: handleRegister,
-                child: const Text('Đăng ký'),
+                onPressed: isLoading ? null : handleRegister,
+                child: isLoading
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Text('Đăng ký'),
               ),
             ),
 
